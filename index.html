@@ -126,5 +126,70 @@ const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_PUBLISHABLE_KEY
 );
+
+async function loadProducts() {
+  const container = document.querySelector("#products .products");
+
+  if (!container) return;
+
+  const { data, error } = await supabaseClient
+    .from("products")
+    .select("*")
+    .eq("is_available", true);
+
+  if (error) {
+    console.error("Products error:", error);
+    return;
+  }
+
+  container.innerHTML = "";
+
+  if (!data || data.length === 0) {
+    container.textContent = "لا توجد منتجات متاحة حاليا";
+    return;
+  }
+
+  data.forEach(product => {
+    const card = document.createElement("div");
+    card.className = "product";
+
+    const image = document.createElement("div");
+    image.className = "product-image";
+
+    if (product.image_url) {
+      const img = document.createElement("img");
+      img.src = product.image_url;
+      img.alt = product.name || "حذاء";
+      img.style.width = "100%";
+      img.style.height = "100%";
+      img.style.objectFit = "cover";
+      image.appendChild(img);
+    } else {
+      image.textContent = "👟";
+    }
+
+    const info = document.createElement("div");
+    info.className = "product-info";
+
+    const name = document.createElement("h3");
+    name.textContent = product.name || "حذاء جديد";
+
+    const price = document.createElement("div");
+    price.className = "price";
+    price.textContent = product.price != null
+      ? product.price + " جنيه"
+      : "السعر يحدد لاحقا";
+
+    info.appendChild(name);
+    info.appendChild(price);
+
+    card.appendChild(image);
+    card.appendChild(info);
+
+    container.appendChild(card);
+  });
+}
+
+loadProducts();
 </script>
 </html>
