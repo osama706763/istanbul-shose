@@ -117,9 +117,182 @@ footer a{color:#e5c9a4}
 <p>أناقتك تبدأ من خطواتك</p>
 <p>تابعنا قريباً على مواقع التواصل الاجتماعي</p>
 </footer>
+<style>
+  #admin-login-box {
+    direction: rtl;
+    max-width: 420px;
+    margin: 25px auto;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #e5dfd5;
+    border-radius: 12px;
+    font-family: Tahoma, Arial, sans-serif;
+    text-align: center;
+  }
+
+  #admin-login-box h2 {
+    color: #292722;
+    margin-bottom: 15px;
+  }
+
+  #admin-login-box input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 7px;
+    font-size: 16px;
+  }
+
+  #admin-login-box button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    background: #292722;
+    color: white;
+    border: 0;
+    border-radius: 7px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  #admin-message {
+    margin-top: 12px;
+    font-size: 14px;
+  }
+
+  #admin-panel {
+    display: none;
+    margin-top: 15px;
+    padding: 15px;
+    background: #f7f3ed;
+    border-radius: 8px;
+  }
+</style>
+
+<div id="admin-login-box">
+  <h2>دخول إدارة ISTANBUL SHOES</h2>
+
+  <form id="admin-login-form">
+    <input
+      id="admin-email"
+      type="email"
+      placeholder="البريد الإلكتروني"
+      required
+    >
+
+    <input
+      id="admin-password"
+      type="password"
+      placeholder="كلمة المرور"
+      required
+    >
+
+    <button type="submit">تسجيل الدخول</button>
+  </form>
+
+  <div id="admin-message" role="status"></div>
+
+  <div id="admin-panel">
+    <h3>تم تسجيل دخول الأدمن بنجاح</h3>
+    <p>أنت الآن مسجل كمسؤول عن الموقع.</p>
+    <button id="admin-logout" type="button">تسجيل الخروج</button>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("admin-login-form");
+  const message = document.getElementById("admin-message");
+  const panel = document.getElementById("admin-panel");
+  const emailInput = document.getElementById("admin-email");
+  const passwordInput = document.getElementById("admin-password");
+  const logoutButton = document.getElementById("admin-logout");
+
+  function showMessage(text, color) {
+    message.textContent = text;
+    message.style.color = color;
+  }
+
+  async function checkAdmin() {
+    const { data: sessionData } =
+      await supabaseClient.auth.getSession();
+
+    if (!sessionData.session) return;
+
+    const { data, error } =
+      await supabaseClient.rpc("is_admin");
+
+    if (!error && data === true) {
+      form.style.display = "none";
+      panel.style.display = "block";
+      showMessage("تم التحقق من صلاحيات الأدمن", "green");
+    } else {
+      await supabaseClient.auth.signOut();
+      showMessage("هذا الحساب ليس لديه صلاحية الأدمن", "red");
+    }
+  }
+
+  form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    showMessage("جارٍ تسجيل الدخول...", "#8a6d3b");
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    const { error: loginError } =
+      await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+    passwordInput.value = "";
+
+    if (loginError) {
+      showMessage("البريد الإلكتروني أو كلمة المرور غير صحيحة", "red");
+      return;
+    }
+
+    const { data, error } =
+      await supabaseClient.rpc("is_admin");
+
+    if (error || data !== true) {
+      await supabaseClient.auth.signOut();
+      showMessage("تم الدخول لكن الحساب ليس أدمن", "red");
+      return;
+    }
+
+    form.style.display = "none";
+    panel.style.display = "block";
+    showMessage("تم تسجيل الدخول بنجاح", "green");
+  });
+
+  logoutButton.addEventListener("click", async function () {
+    const { error } = await supabaseClient.auth.signOut();
+
+    if (error) {
+      showMessage("حدث خطأ أثناء تسجيل الخروج", "red");
+      return;
+    }
+
+    form.style.display = "block";
+    panel.style.display = "none";
+    emailInput.value = "";
+    passwordInput.value = "";
+
+    showMessage("تم تسجيل الخروج", "#8a6d3b");
+  });
+
+  checkAdmin();
+});
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = "https://wuaxtghdcalqlfxsrkjy.supabase.co/rest/v1/";
+const SUPABASE_URL = "https://wuaxtghdcalqlfxsrkjy.supabase.co;
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Q21gq9rrWc6ltKO5pbIq6A_MIau3foW";
 
 const supabaseClient = window.supabase.createClient(
